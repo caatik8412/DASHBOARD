@@ -182,7 +182,7 @@ html,body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkM
 <script>
 const CONFIG = {
   SHEET_URL: "https://script.google.com/macros/s/AKfycbw_Ea7pgPXwX1FvPXWpcLJHP9t7gLsDlanp_IhgClHyD20KQhSgfOY7R1ymXb7HmtDr3w/exec",
-  VERSION: "v3.1",
+  VERSION: "v3.2",
   EXAM_DATE: "2026-11-01"
 };
 
@@ -289,7 +289,11 @@ function renderPapers() {
 function renderTodaySessions() {
   const t = todayKey();
   const sess = SESSIONS.filter(s => s.date === t);
-  const html = sess.length ? sess.map(s => `<div class="session-item">${s.paper} • ${fmtDur(s.mins)} <div class="time">${new Date(s.ts).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'})}</div></div>`).join('') : '<div style="color:var(--muted);font-size:11px">No sessions today</div>';
+  const html = sess.length ? sess.map(s => {
+    const startTime = new Date(s.ts).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+    const endTime = new Date(s.ts + s.mins * 60000).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+    return `<div class="session-item">${s.paper} · ${startTime} - ${endTime} · ${fmtDur(s.mins)}</div>`;
+  }).join('') : '<div style="color:var(--muted);font-size:11px">No sessions today</div>';
   $('todaySessions').innerHTML = html;
 }
 
@@ -334,7 +338,11 @@ function switchTopics(p) {
 }
 
 function renderLog() {
-  const html = SESSIONS.length ? SESSIONS.slice().reverse().map(s => `<div class="session-item">${s.date} • ${s.paper} • ${fmtDur(s.mins)}</div>`).join('') : '<div style="color:var(--muted);font-size:11px">No sessions logged</div>';
+  const html = SESSIONS.length ? SESSIONS.slice().reverse().map(s => {
+    const startTime = new Date(s.ts).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const endTime = new Date(s.ts + s.mins * 60000).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    return `<div class="session-item">${s.date} · ${s.paper} · ${startTime} - ${endTime} · ${fmtDur(s.mins)}</div>`;
+  }).join('') : '<div style="color:var(--muted);font-size:11px">No sessions logged</div>';
   $('logList').innerHTML = html;
 }
 
