@@ -182,7 +182,7 @@ html,body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkM
 <script>
 const CONFIG = {
   SHEET_URL: "https://script.google.com/macros/s/AKfycbw_Ea7pgPXwX1FvPXWpcLJHP9t7gLsDlanp_IhgClHyD20KQhSgfOY7R1ymXb7HmtDr3w/exec",
-  VERSION: "v3.0",
+  VERSION: "v3.1",
   EXAM_DATE: "2026-11-01"
 };
 
@@ -198,6 +198,7 @@ let SESSIONS = [], STATE = {}, TOPICS = [], currentTopicPaper = 'FR';
 async function init() {
   $('version').textContent = CONFIG.VERSION;
   await pull();
+  renderAll(); // Make sure first render happens
   setInterval(pull, 30000);
   setInterval(pullLive, 5000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) pull(); });
@@ -210,8 +211,11 @@ async function pull() {
     SESSIONS = d.sessions || [];
     STATE = d.state || {};
     TOPICS = d.topicsData || [];
+    console.log('Topics fetched:', TOPICS.length, 'items');
     renderAll();
-  } catch (e) { }
+  } catch (e) { 
+    console.error('Fetch error:', e);
+  }
 }
 
 async function pullLive() {
@@ -293,12 +297,15 @@ function renderTopics() {
   const done = filtered.filter(t => t.done === 'TRUE' || t.done === true).length;
   
   if (filtered.length === 0) {
-    $('topicsList').innerHTML = '<div style="color:var(--muted);font-size:11px;padding:12px;text-align:center">No topics yet</div>';
+    $('topicsList').innerHTML = '<div style="color:var(--muted);font-size:11px;padding:12px;text-align:center">No topics for this paper</div>';
     return;
   }
   
   const html = `<div style="margin-bottom:8px;font-size:10px;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--line)">${done}/${filtered.length} completed</div>` +
-    filtered.map(t => `<div class="topic-row"><div class="name">${t.name}</div><div class="check">${t.done === 'TRUE' || t.done === true ? '✓' : ''}</div></div>`).join('');
+    filtered.map(t => {
+      const isCompleted = t.done === 'TRUE' || t.done === true;
+      return `<div class="topic-row"><div class="name">${t.name}</div><div class="check" style="color:${isCompleted ? 'var(--good)' : 'var(--line)'}">${isCompleted ? '✓' : '◦'}</div></div>`;
+    }).join('');
   $('topicsList').innerHTML = html;
 }
 
