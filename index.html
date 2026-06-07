@@ -227,6 +227,7 @@ async function pullLive() {
 }
 
 function renderAll() {
+  console.log('renderAll called. TOPICS:', TOPICS);
   renderStats();
   renderPapers();
   renderTodaySessions();
@@ -293,19 +294,33 @@ function renderTodaySessions() {
 }
 
 function renderTopics() {
-  const filtered = (TOPICS || []).filter(t => t.paper === currentTopicPaper);
-  const done = filtered.filter(t => t.done === 'TRUE' || t.done === true).length;
-  
-  if (filtered.length === 0) {
-    $('topicsList').innerHTML = '<div style="color:var(--muted);font-size:11px;padding:12px;text-align:center">No topics for this paper</div>';
+  // Make sure TOPICS array exists and has data
+  if (!TOPICS || TOPICS.length === 0) {
+    $('topicsList').innerHTML = '<div style="color:var(--muted);font-size:11px;padding:12px;text-align:center">Loading topics...</div>';
     return;
   }
   
-  const html = `<div style="margin-bottom:8px;font-size:10px;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--line)">${done}/${filtered.length} completed</div>` +
-    filtered.map(t => {
-      const isCompleted = t.done === 'TRUE' || t.done === true;
-      return `<div class="topic-row"><div class="name">${t.name}</div><div class="check" style="color:${isCompleted ? 'var(--good)' : 'var(--line)'}">${isCompleted ? '✓' : '◦'}</div></div>`;
-    }).join('');
+  const filtered = TOPICS.filter(t => t.paper === currentTopicPaper);
+  
+  if (filtered.length === 0) {
+    $('topicsList').innerHTML = '<div style="color:var(--muted);font-size:11px;padding:12px;text-align:center">No topics for ' + currentTopicPaper + '</div>';
+    return;
+  }
+  
+  const done = filtered.filter(t => {
+    // Handle both 'TRUE' string and true boolean
+    return t.done === 'TRUE' || t.done === true;
+  }).length;
+  
+  let html = `<div style="margin-bottom:8px;font-size:10px;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--line)">${done}/${filtered.length} completed</div>`;
+  
+  html += filtered.map(t => {
+    const isCompleted = t.done === 'TRUE' || t.done === true;
+    const checkColor = isCompleted ? 'var(--good)' : 'var(--line)';
+    const checkSymbol = isCompleted ? '✓' : '◦';
+    return `<div class="topic-row" style="padding:8px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center"><div style="flex:1">${t.name}</div><div style="color:${checkColor};font-weight:600;font-size:12px">${checkSymbol}</div></div>`;
+  }).join('');
+  
   $('topicsList').innerHTML = html;
 }
 
